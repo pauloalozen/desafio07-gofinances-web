@@ -20,22 +20,36 @@ interface FileProps {
 
 const Import: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
+  const [status, setStatus] = useState<string | null>(null);
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // const data = new FormData();
+    uploadedFiles.map(async file => {
+      const data = new FormData();
+      data.set('file', file.file, file.name);
 
-    // TODO
+      try {
+        await api.post('/transactions/import', data);
+      } catch (err) {
+        console.log(err.response.error);
+      }
+    });
 
-    try {
-      // await api.post('/transactions/import', data);
-    } catch (err) {
-      // console.log(err.response.error);
-    }
+    setUploadedFiles([]);
+    setStatus('carregado');
   }
 
   function submitFile(files: File[]): void {
-    // TODO
+    const newsFiles = files.map(item => {
+      return {
+        file: item,
+        name: item.name,
+        readableSize: filesize(item.size),
+      };
+    });
+
+    setUploadedFiles([...uploadedFiles, ...newsFiles]);
+    setStatus(null);
   }
 
   return (
@@ -46,7 +60,7 @@ const Import: React.FC = () => {
         <ImportFileContainer>
           <Upload onUpload={submitFile} />
           {!!uploadedFiles.length && <FileList files={uploadedFiles} />}
-
+          {status && <p>Arquivos carregados</p>}
           <Footer>
             <p>
               <img src={alert} alt="Alert" />
